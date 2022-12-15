@@ -1,0 +1,8 @@
+To compile and install my driver,
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ../
+make
+sudo make install
+
+Then restart Ekos, and create a new equipment profile,
+using my driver.
