@@ -1,4 +1,3 @@
-
 include(CheckCCompilerFlag)
 
 #IF (NOT ${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
