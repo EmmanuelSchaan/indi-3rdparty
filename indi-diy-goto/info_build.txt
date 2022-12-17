@@ -1,6 +1,10 @@
-To compile and install my driver,
+Compile and install my driver from the build directory:
 cd build
+
+Only the first time:
 cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ../
+
+Every time I want to recompile and install:
 make
 sudo make install
 
