@@ -48,19 +48,37 @@ bool DIYGoToDriver::initProperties()
     defineProperty(&SayHelloSP);
 
 
-    // Text property
-    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", "Hello, world!");
+//    // Text property
+//    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", "Hello, world!");
+//    WhatToSayTP.fill(
+//          getDeviceName(), 
+//          "WHAT_TO_SAY", 
+//          "Example text", 
+//          MAIN_CONTROL_TAB, 
+//          IP_RW, 
+//          60, 
+//          IPS_IDLE);
+//    defineProperty(&WhatToSayTP);
+
+    // Text property: load value from last session, if available
+    // We start by assigning the default value to a string
+    char configSay[256]={"Hello, world!"};
+    // Next we load the value, if any, from the config file. If the operation fails, we still have our default value.
+    // If the operation succeeds, we get the config value.
+    IUGetConfigText(getDeviceName(), "WHAT_TO_SAY", "WHAT_TO_SAY", configSay, 256);
+    // Next we intilize the property like before. This time we set the initial text to configSay.
+    WhatToSayTP[0].fill("WHAT_TO_SAY", "What to say?", configSay);
     WhatToSayTP.fill(
           getDeviceName(), 
           "WHAT_TO_SAY", 
-          "Example text", 
-          MAIN_CONTROL_TAB, 
-          IP_RW, 
+          "Example text",
+          MAIN_CONTROL_TAB, IP_RW, 
           60, 
           IPS_IDLE);
     defineProperty(&WhatToSayTP);
 
-    // Switch with multiple values
+
+    // Switch property with multiple values
     SayHiSP[SAY_HI_DEFAULT].fill(
         "SAY_HI_DEFAULT",    // The name of the VALUE
         "Say Hi",            // The label of the VALUE
@@ -83,9 +101,39 @@ bool DIYGoToDriver::initProperties()
     );        
     defineProperty(&SayHiSP);
 
+
+    // Number property
+    // Counter of how many times the user clicks the button
+    SayCountNP[0].fill(
+                 "SAY_COUNT",       // name of the VALUE
+                 "Count",           // label of the VALUE
+                 "%0.f",            // format specifier to show the value to the user; this should be a format specifier for a double
+                 0,                 // minimum value; used by the client to render the UI
+                 0,                 // maximum value; used by the client to render the UI
+                 0,                 // step value; used by the client to render the UI
+                 0);                // current value
+    SayCountNP.fill(
+                getDeviceName(),    // device name
+                "SAY_COUNT",        // PROPERTY name
+                "Say Count",        // PROPERTY label
+                MAIN_CONTROL_TAB,   // What tab should we be on?
+                IP_RO,              // Make this read-only
+                0,                  // With no timeout
+                IPS_IDLE);          // and an initial state of idle
+
+
     return true;
 }
 
+
+// Save selected property values from last session
+bool DIYGoToDriver::saveConfigItems(FILE *fp)
+{
+    INDI::DefaultDevice::saveConfigItems(fp);
+    IUSaveConfigText(fp, &WhatToSayTP);
+
+    return true;
+}
 
 // Function that gets called when the user clicks on a switch
 bool DIYGoToDriver::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
@@ -103,6 +151,17 @@ bool DIYGoToDriver::ISNewSwitch(const char *dev, const char *name, ISState *stat
             SayHelloSP.setState(IPS_IDLE);
             // And actually inform INDI of those two operations
             SayHelloSP.apply();
+
+            // Increment our "Say Count" counter.
+            // Here we update the value on the property.
+            SayCountNP[0].setValue(SayCountNP[0].getValue() + 1);
+            // And then send a message to the clients to let them know it is updated.
+            SayCountNP.apply();
+            // failed attempt at printing the counter value
+            //LOG_INFO(SayCountNP[0].getValue());
+            //LOG_INFO("Counter = %f", SayCountNP[0].getValue());
+            //LOG_INFO(to_string(SayCountNP[0].getValue()));
+
             // We're done!
             return true;
         }
@@ -165,4 +224,22 @@ bool DIYGoToDriver::ISNewText(const char *dev, const char *name, char *texts[], 
 
     // Nobody has claimed this, so let the parent handle it
     return INDI::DefaultDevice::ISNewText(dev, name, texts, names, n);
+}
+
+
+// This function updates the client about properties
+bool DIYGoToDriver::updateProperties()
+{
+    INDI::DefaultDevice::updateProperties();
+
+    if (isConnected())
+    {
+        defineProperty(&SayCountNP);
+    }
+    else
+    {
+        deleteProperty(SayCountNP);
+    }
+
+    return true;
 }

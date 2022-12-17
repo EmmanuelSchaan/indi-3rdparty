@@ -18,6 +18,23 @@ public:
 public:
     virtual bool initProperties() override;
 
+// Saving selected property values from previous session
+protected:
+    virtual bool saveConfigItems(FILE *fp) override;
+
+// Function that gets called when a user clicks on a switch
+public:
+    virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
+                             int n) override;
+
+// Function that gets called when a user enters text
+public:
+    virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[],
+                           int n) override;
+
+// Function that defines what happens when properties are updated
+public:
+    virtual bool updateProperties() override;
 
 // Example property: switch
 private:
@@ -28,7 +45,7 @@ private:
     };
 
 
-// Switch with multiple values
+// Example property: switch with multiple values
 // Use the inherent autoincrementing of an enum to generate our indexes.
 // This makes keeping track of multiple values on a property MUCH easier
 // than remembering indexes throughout your code.
@@ -47,14 +64,8 @@ private:
     INDI::PropertyText WhatToSayTP {1};
 
 
-// Function that gets called when a user clicks on a switch
-public:
-    virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[],
-                             int n) override;
+// Example property: number
+INDI::PropertyNumber SayCountNP {1};
 
-// Function that gets called when a user enters text
-public:
-    virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[],
-                           int n) override;
 };
 
