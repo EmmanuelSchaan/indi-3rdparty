@@ -4,6 +4,7 @@
 // We declare an auto pointer to DIYGoToDriver.
 static std::unique_ptr<DIYGoToDriver> diygotodriver(new DIYGoToDriver());
 
+// Class constructor
 DIYGoToDriver::DIYGoToDriver()
 {
     setVersion(CDRIVER_VERSION_MAJOR, CDRIVER_VERSION_MINOR);
@@ -15,7 +16,7 @@ const char *DIYGoToDriver::getDefaultName()
 }
 
 
-// Adding driver properties
+// Initialize driver properties
 bool DIYGoToDriver::initProperties()
 {
     // initialize the parent's properties first
@@ -23,11 +24,10 @@ bool DIYGoToDriver::initProperties()
 
     // Switch property
     SayHelloSP[HELLO_COMMAND].fill(
-    "HELLO_COMMAND",// The name of the VALUE
-    "Say Hello",    // The label of the VALUE
-    ISS_OFF         // The switch state
-    );
-
+       "HELLO_COMMAND",// The name of the VALUE
+       "Say Hello",    // The label of the VALUE
+       ISS_OFF         // The switch state
+       );
     SayHelloSP.fill(
         getDeviceName(),  // The name of the device
         "SAY_HELLO",      // The name of the PROPERTY
@@ -37,8 +37,7 @@ bool DIYGoToDriver::initProperties()
         ISR_ATMOST1,      // At most 1 can be on
         60,               // With a timeout of 60 seconds
         IPS_IDLE          // and an initial state of idle.
-    );
-
+        );
     // now we register the property with the DefaultDevice
     // without this, the property won't show up on the control panel
     // NOTE: you don't have to call defineProperty here. You can call it at
@@ -46,6 +45,30 @@ bool DIYGoToDriver::initProperties()
     // until the user does something else? Maybe you want to connect, query your
     // device, then call this. It's up to you.
     defineProperty(&SayHelloSP);
+
+
+    // Switch property with multiple values
+    SayHiSP[SAY_HI_DEFAULT].fill(
+        "SAY_HI_DEFAULT",    // The name of the VALUE
+        "Say Hi",            // The label of the VALUE
+        ISS_OFF                 // The switch state
+        );
+    SayHiSP[SAY_HI_CUSTOM].fill(
+        "SAY_HI_CUSTOM",     // The name of the VALUE
+        "Say Custom",           // The label of the VALUE
+        ISS_OFF                 // The switch state
+        );
+    SayHiSP.fill(
+        getDeviceName(),  // The name of the device
+        "SAY_HI",      // The name of the PROPERTY
+        "Example mult switch", // The label of the PROPERTY
+        MAIN_CONTROL_TAB, // What tab should we be on?
+        IP_RW,            // Let's make it read/write.
+        ISR_ATMOST1,      // At most 1 can be on
+        60,               // With a timeout of 60 seconds
+        IPS_IDLE          // and an initial state of idle.
+        );        
+    defineProperty(&SayHiSP);
 
 
 //    // Text property
@@ -78,29 +101,6 @@ bool DIYGoToDriver::initProperties()
     defineProperty(&WhatToSayTP);
 
 
-    // Switch property with multiple values
-    SayHiSP[SAY_HI_DEFAULT].fill(
-        "SAY_HI_DEFAULT",    // The name of the VALUE
-        "Say Hi",            // The label of the VALUE
-        ISS_OFF                 // The switch state
-        );
-    SayHiSP[SAY_HI_CUSTOM].fill(
-        "SAY_HI_CUSTOM",     // The name of the VALUE
-        "Say Custom",           // The label of the VALUE
-        ISS_OFF                 // The switch state
-        );
-    SayHiSP.fill(
-        getDeviceName(),  // The name of the device
-        "SAY_HI",      // The name of the PROPERTY
-        "Example mult switch", // The label of the PROPERTY
-        MAIN_CONTROL_TAB, // What tab should we be on?
-        IP_RW,            // Let's make it read/write.
-        ISR_ATMOST1,      // At most 1 can be on
-        60,               // With a timeout of 60 seconds
-        IPS_IDLE          // and an initial state of idle.
-    );        
-    defineProperty(&SayHiSP);
-
 
     // Number property
     // Counter of how many times the user clicks the button
@@ -120,6 +120,7 @@ bool DIYGoToDriver::initProperties()
                 IP_RO,              // Make this read-only
                 0,                  // With no timeout
                 IPS_IDLE);          // and an initial state of idle
+    defineProperty(&SayCountNP);
 
 
     return true;
@@ -192,10 +193,7 @@ bool DIYGoToDriver::ISNewSwitch(const char *dev, const char *name, ISState *stat
             return true;
         }
 
-
-
     }
-
     // Nobody has claimed this, so let the parent handle it
     return INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n);
 }
@@ -221,7 +219,6 @@ bool DIYGoToDriver::ISNewText(const char *dev, const char *name, char *texts[], 
             return true;
         }
     }
-
     // Nobody has claimed this, so let the parent handle it
     return INDI::DefaultDevice::ISNewText(dev, name, texts, names, n);
 }
