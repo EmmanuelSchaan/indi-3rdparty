@@ -5,33 +5,16 @@
 #include <cmath>
 #include <memory>
  
-
-// We declare an auto pointer to DIYGoTo
 static std::unique_ptr<DIYGoTo> diygoto(new DIYGoTo());
  
-
-/**************************************************************************************
-** Class constructor 
-***************************************************************************************/
 DIYGoTo::DIYGoTo()
 {
     // We add an additional debug level so we can log verbose scope status
     DBG_SCOPE = INDI::Logger::getInstance().addDebugLevel("Scope Verbose", "SCOPE");
 }
-
-
-/**************************************************************************************
-** INDI is asking us for our default device name
-***************************************************************************************/
-const char *DIYGoTo::getDefaultName()
-{
-    return "DIY Go-to";
-}
-
  
 /**************************************************************************************
-** We init our properties here. 
-The only thing we want to init are the Debug controls
+** We init our properties here. The only thing we want to init are the Debug controls
 ***************************************************************************************/
 bool DIYGoTo::initProperties()
 {
@@ -47,81 +30,9 @@ bool DIYGoTo::initProperties()
  
     // Set telescope capabilities. 0 is for the the number of slew rates that we support. We have none for this simple driver.
     SetTelescopeCapability(TELESCOPE_CAN_GOTO | TELESCOPE_CAN_ABORT, 0);
-
-
-    // RA Tic id
-    // Text property: load value from last session, if available
-    // We start by assigning the default value to a string
-    char tidIdRADefault[256]={"00315372"};
-    // Next we load the value, if any, from the config file. If the operation fails, we still have our default value.
-    // If the operation succeeds, we get the config value.
-    IUGetConfigText(getDeviceName(), "TIC_ID_RA", "TIC_ID_RA", tidIdRADefault, 256);
-    // Next we intilize the property like before. This time we set the initial text to tidIdRADefault.
-    TicIdRA[0].fill("TIC_ID_RA", "Tic ID RA?", tidIdRADefault);
-    TicIdRA.fill(
-          getDeviceName(), 
-          "TID_ID_RA", 
-          "Tic ID RA",
-          MAIN_CONTROL_TAB, IP_RW, 
-          60, 
-          IPS_IDLE);
-    defineProperty(&TicIdRA);
-
-    // Same for the Dec Tic id
-    char tidIdDecDefault[256]={"00315338"};
-    IUGetConfigText(getDeviceName(), "TIC_ID_DEC", "TIC_ID_DEC", tidIdDecDefault, 256);
-    TicIdDec[0].fill("TIC_ID_DEC", "Tic ID Dec?", tidIdDecDefault);
-    TicIdDec.fill(
-          getDeviceName(), 
-          "TID_ID_DEC", 
-          "Tic ID Dec",
-          MAIN_CONTROL_TAB, IP_RW, 
-          60, 
-          IPS_IDLE);
-    defineProperty(&TicIdDec);
-
-
+ 
     return true;
 }
-
-
-
-/**************************************************************************************
-** Function that gets called when new text is entered
-***************************************************************************************/
-bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
-{
-    // Make sure it is for us.
-    if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
-    {
-        if (TicIdRA.isNameMatch(name))
-        {
-            // Update the property to what the client sent
-            // All elements in the property will now by synced with the client.
-            TicIdRA.update(texts, names, n);
-            // Set state to Idle
-            TicIdRA.setState(IPS_IDLE);
-            // Send back to client.
-            TicIdRA.apply();
-            //log the content of the property to the client
-            LOG_INFO(TicIdRA[0].getText());
-            return true;
-        }
-        // Same for Dec Tic id
-        if (TicIdDec.isNameMatch(name))
-        {
-            TicIdDec.update(texts, names, n);
-            TicIdDec.setState(IPS_IDLE);
-            TicIdDec.apply();
-            LOG_INFO(TicIdDec[0].getText());
-            return true;
-        }
-    }
-    // Nobody has claimed this, so let the parent handle it
-    return INDI::Telescope::ISNewText(dev, name, texts, names, n);
-}
-
-
  
 /**************************************************************************************
 ** INDI is asking us to check communication with the device via a handshake
@@ -133,6 +44,13 @@ bool DIYGoTo::Handshake()
     return true;
 }
  
+/**************************************************************************************
+** INDI is asking us for our default device name
+***************************************************************************************/
+const char *DIYGoTo::getDefaultName()
+{
+    return "Simple Scope";
+}
  
 /**************************************************************************************
 ** Client is asking us to slew to a new position
