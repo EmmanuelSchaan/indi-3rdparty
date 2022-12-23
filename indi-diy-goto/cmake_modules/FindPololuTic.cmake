@@ -33,7 +33,8 @@ else (POLOLU_TIC_INCLUDE_DIR AND POLOLU_TIC_LIBRARIES)
 
   # Manu: Setting by hand the include and library paths
   set(POLOLU_TIC_INCLUDE_DIR "/usr/local/include/libpololu-tic-1")
-  set(POLOLU_TIC_LIBRARIES "/usr/local/lib")
+  set(POLOLU_TIC_LIBRARIES "/usr/local/lib/libpololu-tic-1.so")
+  #set(POLOLU_TIC_LIBRARIES "/usr/local/lib/")
 
   set(CMAKE_REQUIRED_INCLUDES ${POLOLU_TIC_INCLUDE_DIR})
   set(CMAKE_REQUIRED_LIBRARIES ${POLOLU_TIC_LIBRARIES})

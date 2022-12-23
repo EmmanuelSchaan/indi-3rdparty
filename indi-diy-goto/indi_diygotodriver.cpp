@@ -132,34 +132,34 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
 ** Pololu Tic function to connect to a Tic
 ***************************************************************************************/
 
-//// Opens a handle to a Tic that can be used for communication.
-////
-//// To open a handle to any Tic:
-////   tic_handle * handle = open_handle();
-//// To open a handle to the Tic with serial number 01234567:
-////   tic_handle * handle = open_handle("01234567");
-//tic::handle open_handle(const char * desired_serial_number = nullptr)
-//{
-//  // Get a list of Tic devices connected via USB.
-//  std::vector<tic::device> list = tic::list_connected_devices();
-// 
-//  // Iterate through the list and select one device.
-//  for (const tic::device & device : list)
-//  {
-//    if (desired_serial_number &&
-//      device.get_serial_number() != desired_serial_number)
-//    {
-//      // Found a device with the wrong serial number, so continue on to
-//      // the next device in the list.
-//      continue;
-//    }
-// 
-//    // Open a handle to this device and return it.
-//    return tic::handle(device);
-//  }
-// 
-//  throw std::runtime_error("No device found.");
-//}
+// Opens a handle to a Tic that can be used for communication.
+//
+// To open a handle to any Tic:
+//   tic_handle * handle = open_handle();
+// To open a handle to the Tic with serial number 01234567:
+//   tic_handle * handle = open_handle("01234567");
+tic::handle open_handle(const char * desired_serial_number = nullptr)
+{
+  // Get a list of Tic devices connected via USB.
+  std::vector<tic::device> list = tic::list_connected_devices();
+ 
+  // Iterate through the list and select one device.
+  for (const tic::device & device : list)
+  {
+    if (desired_serial_number &&
+      device.get_serial_number() != desired_serial_number)
+    {
+      // Found a device with the wrong serial number, so continue on to
+      // the next device in the list.
+      continue;
+    }
+ 
+    // Open a handle to this device and return it.
+    return tic::handle(device);
+  }
+ 
+  throw std::runtime_error("No device found.");
+}
 
 
 
