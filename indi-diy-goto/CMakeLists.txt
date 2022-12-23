@@ -12,6 +12,8 @@ find_package(INDI REQUIRED)
 find_package(Nova REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(GSL REQUIRED)
+# Tell cmake to look for file FindPololuTic.cmake
+find_package(PololuTic REQUIRED)
 
 # these will be used to set the version number in config.h and our driver's xml file
 set(CDRIVER_VERSION_MAJOR 0)
@@ -35,6 +37,7 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories( ${INDI_INCLUDE_DIR})
 include_directories( ${NOVA_INCLUDE_DIR})
 include_directories( ${EV_INCLUDE_DIR})
+include_directories( ${POLOLU_TIC_INCLUDE_DIR})
 
 include(CMakeCommon)
 
@@ -50,6 +53,7 @@ target_link_libraries(
     ${INDI_LIBRARIES}
     ${NOVA_LIBRARIES}
     ${GSL_LIBRARIES}
+    ${POLOLU_TIC_LIBRARIES}
 )
 
 # tell cmake where to install our executable
