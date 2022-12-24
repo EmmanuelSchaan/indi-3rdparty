@@ -51,13 +51,18 @@ private:
     bool setupTics();
     bool energizeTics();
     bool deenergizeTics();
+    // Tic variables
+    tic::handle handleTicRA;
+    tic::handle handleTicDec;
+    tic::variables varTicRA;
+    tic::variables varTicDec;
 
     // Text properties for Tics
     // RA and Dec Tic id
     // for me, it is "00315372" for RA and "00315338" for Dec
     INDI::PropertyText TicIdRA {1};
     INDI::PropertyText TicIdDec {1};
-    // Specs of stepper motor and gear train
+    // Settings and specs of stepper motor and gear train
     INDI::PropertyText StepsPerRotation {1};
     INDI::PropertyText GearReductionFactor {1};
     INDI::PropertyText MotorMaxCurrent {1};
@@ -65,11 +70,10 @@ private:
     INDI::PropertyText MaxPulseSpeed {1};
     INDI::PropertyText MaxPulseAccelDecel {1};
 
-    tic::handle handleTicRA;
-    tic::variables varTicRA;
-
-    tic::handle handleTicDec;
-    tic::variables varTicDec;
+    // Utility functions: angles, pulses, speeds, etc
+//    double pulseToAngle(int pulse, std::string unit="deg");
+//    int angleToPulse(double angle, std::string unit="deg");
+//    int computePulseSpeedTracking();
 
 };
 

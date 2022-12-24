@@ -345,6 +345,9 @@ bool DIYGoTo::connectTics()
        // Dec Tic
        handleTicDec = open_tic_handle(TicIdDec[0].getText());
        varTicDec = handleTicDec.get_variables();
+       // Clear potential driver errors
+       handleTicRA.clear_driver_error();
+       handleTicDec.clear_driver_error();
        
        LOG_INFO("Successfully connected to RA and Dec Tics.");
     }
@@ -513,6 +516,49 @@ bool DIYGoTo::Abort()
     }
 }
  
+
+
+
+
+
+
+
+
+/**************************************************************************************
+** Utility functions: angles, pulses, speeds, etc
+***************************************************************************************/
+
+//double pulseToAngle(int pulse, std::string unit="deg") {
+//  // Convert pulse position to angular position
+//  double result = pulse * 360.0;
+//  result /= microstepping * stepsPerRotation * reductionFactor;
+//  if (unit == "rad") {
+//    result *= M_PI / 180.0;
+//  }
+//  return result;
+//}
+//
+//
+//int angleToPulse(double angle, std::string unit="deg") {
+//  // Convert angular position to pulse position
+//  double result = angle / 360.0;
+//  result *= microstepping * stepsPerRotation * reductionFactor;
+//  if (unit == "rad") {
+//    result /= M_PI / 180.0;
+//  }
+//  return (int)(result);
+//}
+//
+//
+//int computePulseSpeedTracking() {
+//  // result in [1,e-4 pulses/sec], as required by ticcmd
+//  const double siderealDay = 23.9344696 * 3600.0; // [sec]
+//  double result = stepsPerRotation * reductionFactor * microStepping; // [pulses per sidereal day]
+//  result /= siderealDay; // [pulses/sec]
+//  result *= 1.e4; // [1.e-4 pulses/sec]
+//  return (int)(result);
+//}
+
 
 
 /**************************************************************************************
