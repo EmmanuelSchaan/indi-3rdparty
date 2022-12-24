@@ -528,36 +528,42 @@ bool DIYGoTo::Abort()
 ** Utility functions: angles, pulses, speeds, etc
 ***************************************************************************************/
 
-//double pulseToAngle(int pulse, std::string unit="deg") {
-//  // Convert pulse position to angular position
-//  double result = pulse * 360.0;
-//  result /= microstepping * stepsPerRotation * reductionFactor;
-//  if (unit == "rad") {
-//    result *= M_PI / 180.0;
-//  }
-//  return result;
-//}
-//
-//
-//int angleToPulse(double angle, std::string unit="deg") {
-//  // Convert angular position to pulse position
-//  double result = angle / 360.0;
-//  result *= microstepping * stepsPerRotation * reductionFactor;
-//  if (unit == "rad") {
-//    result /= M_PI / 180.0;
-//  }
-//  return (int)(result);
-//}
-//
-//
-//int computePulseSpeedTracking() {
-//  // result in [1,e-4 pulses/sec], as required by ticcmd
-//  const double siderealDay = 23.9344696 * 3600.0; // [sec]
-//  double result = stepsPerRotation * reductionFactor * microStepping; // [pulses per sidereal day]
-//  result /= siderealDay; // [pulses/sec]
-//  result *= 1.e4; // [1.e-4 pulses/sec]
-//  return (int)(result);
-//}
+double DIYGoTo::pulseToAngle(int pulse, std::string unit="deg") {
+  // Convert pulse position to angular position
+  double result = pulse * 360.0;
+  result /= static_cast<double>(std::stoul(Microstepping[0].getText()));
+  result /= static_cast<double>(std::stoul(StepsPerRotation[0].getText()));
+  result /= static_cast<double>(std::stoul(GearReductionFactor[0].getText()));
+  if (unit == "rad") {
+    result *= M_PI / 180.0;
+  }
+  return result;
+}
+
+
+int DIYGoTo::angleToPulse(double angle, std::string unit="deg") {
+  // Convert angular position to pulse position
+  double result = angle / 360.0;
+  result *= static_cast<double>(std::stoul(Microstepping[0].getText()));
+  result *= static_cast<double>(std::stoul(StepsPerRotation[0].getText()));
+  result *= static_cast<double>(std::stoul(GearReductionFactor[0].getText()));
+  if (unit == "rad") {
+    result /= M_PI / 180.0;
+  }
+  return (int)(result);
+}
+
+
+int DIYGoTo::computePulseSpeedTracking() {
+  // result in [1,e-4 pulses/sec], as required by ticcmd
+  double result = static_cast<double>(std::stoul(Microstepping[0].getText()));
+  result *= static_cast<double>(std::stoul(StepsPerRotation[0].getText()));
+  result *= static_cast<double>(std::stoul(GearReductionFactor[0].getText())); // [pulses per sidereal day]
+  const double siderealDay = 23.9344696 * 3600.0; // [sec]
+  result /= siderealDay; // [pulses/sec]
+  result *= 1.e4; // [1.e-4 pulses/sec]
+  return (int)(result);
+}
 
 
 

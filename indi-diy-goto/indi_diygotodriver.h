@@ -71,10 +71,9 @@ private:
     INDI::PropertyText MaxPulseAccelDecel {1};
 
     // Utility functions: angles, pulses, speeds, etc
-//    double pulseToAngle(int pulse, std::string unit="deg");
-//    int angleToPulse(double angle, std::string unit="deg");
-//    int computePulseSpeedTracking();
+    double pulseToAngle(int, std::string);
+    int angleToPulse(double, std::string);
+    int computePulseSpeedTracking();
 
 };
-
 
