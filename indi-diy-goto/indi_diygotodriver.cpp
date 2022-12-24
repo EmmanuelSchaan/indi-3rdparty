@@ -56,33 +56,62 @@ bool DIYGoTo::initProperties()
     // RA Tic id
     // Text property: load value from last session, if available
     // We start by assigning the default value to a string
-    char tidIdRADefault[256]={"00315372"};
+    char ticIdRADefault[256]={"00315372"};
     // Next we load the value, if any, from the config file. If the operation fails, we still have our default value.
     // If the operation succeeds, we get the config value.
-    IUGetConfigText(getDeviceName(), "TIC_ID_RA", "TIC_ID_RA", tidIdRADefault, 256);
-    // Next we intilize the property like before. This time we set the initial text to tidIdRADefault.
-    TicIdRA[0].fill("TIC_ID_RA", "Tic ID RA?", tidIdRADefault);
+    IUGetConfigText(getDeviceName(), "TIC_ID_RA", "TIC_ID_RA", ticIdRADefault, 256);
+    // Next we intilize the property like before. This time we set the initial text to ticIdRADefault.
+    TicIdRA[0].fill("TIC_ID_RA", "Format 01234567", ticIdRADefault);
     TicIdRA.fill(
           getDeviceName(), 
           "TID_ID_RA", 
           "Tic ID RA",
-          MAIN_CONTROL_TAB, IP_RW, 
+          INFO_TAB, IP_RW, 
           60, 
           IPS_IDLE);
     defineProperty(&TicIdRA);
 
     // Same for the Dec Tic id
-    char tidIdDecDefault[256]={"00315338"};
-    IUGetConfigText(getDeviceName(), "TIC_ID_DEC", "TIC_ID_DEC", tidIdDecDefault, 256);
-    TicIdDec[0].fill("TIC_ID_DEC", "Tic ID Dec?", tidIdDecDefault);
+    char ticIdDecDefault[256]={"00315338"};
+    IUGetConfigText(getDeviceName(), "TIC_ID_DEC", "TIC_ID_DEC", ticIdDecDefault, 256);
+    TicIdDec[0].fill("TIC_ID_DEC", "Format 01234567", ticIdDecDefault);
     TicIdDec.fill(
           getDeviceName(), 
           "TID_ID_DEC", 
           "Tic ID Dec",
-          MAIN_CONTROL_TAB, IP_RW, 
+          INFO_TAB, IP_RW, 
           60, 
           IPS_IDLE);
     defineProperty(&TicIdDec);
+
+    // Number of steps per rotation for the stepper motor
+    char stepsPerRotationDefault[256]={"200"};
+    IUGetConfigText(getDeviceName(), "STEPS_PER_ROTATION", "STEPS_PER_ROTATION", stepsPerRotationDefault, 256);
+    StepsPerRotation[0].fill("STEPS_PER_ROTATION", "(Stepper motor spec)", stepsPerRotationDefault);
+    StepsPerRotation.fill(
+          getDeviceName(), 
+          "STEPS_PER_ROTATION", 
+          "Steps per rotation",
+          INFO_TAB, IP_RW, 
+          60, 
+          IPS_IDLE);
+    defineProperty(&StepsPerRotation);
+
+    // Gear reduction factor (same for both motors)
+    //  gearbox reduction: (99. + 104./2057.)
+    //  pinion-wheel reduction: 84./20.
+    //  --> total reduction: 416.0123480797
+    char gearReductionFactorDefault[256]={"416.0123480797"};
+    IUGetConfigText(getDeviceName(), "GEAR_REDUCTION_FACTOR", "GEAR_REDUCTION_FACTOR", gearReductionFactorDefault, 256);
+    GearReductionFactor[0].fill("GEAR_REDUCTION_FACTOR", "motor angle / output angle", gearReductionFactorDefault);
+    GearReductionFactor.fill(
+          getDeviceName(), 
+          "GEAR_REDUCTION_FACTOR", 
+          "Gear reduction factor",
+          INFO_TAB, IP_RW, 
+          60, 
+          IPS_IDLE);
+    defineProperty(&GearReductionFactor);
 
 
     // Connect to the Pololu Tics
@@ -117,7 +146,6 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             connectTicsRADec();
             return true;
         }
-        // Same for Dec Tic id
         if (TicIdDec.isNameMatch(name))
         {
             TicIdDec.update(texts, names, n);
@@ -126,6 +154,22 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             LOGF_INFO("Dec Tic ID set to %s", TicIdDec[0].getText());
             // Re-connect to the Pololu Tics
             connectTicsRADec();
+            return true;
+        }
+        if (StepsPerRotation.isNameMatch(name))
+        {
+            StepsPerRotation.update(texts, names, n);
+            StepsPerRotation.setState(IPS_IDLE);
+            StepsPerRotation.apply();
+            LOGF_INFO("Step. mot. steps per rotation set to %s", StepsPerRotation[0].getText());
+            return true;
+        }
+        if (GearReductionFactor.isNameMatch(name))
+        {
+            GearReductionFactor.update(texts, names, n);
+            GearReductionFactor.setState(IPS_IDLE);
+            GearReductionFactor.apply();
+            LOGF_INFO("Gear reduction factor set to %s", GearReductionFactor[0].getText());
             return true;
         }
     }

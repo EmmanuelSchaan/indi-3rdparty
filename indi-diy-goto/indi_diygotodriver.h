@@ -48,10 +48,14 @@ private:
     tic::handle open_tic_handle(const char * desired_serial_number);
     bool connectTicsRADec();
 
-    // Text property to enter the RA and Dec Tic id
+    // Text properties for Tics
+    // RA and Dec Tic id
     // for me, it is "00315372" for RA and "00315338" for Dec
     INDI::PropertyText TicIdRA {1};
     INDI::PropertyText TicIdDec {1};
+    // Specs of stepper motor and gear train
+    INDI::PropertyText StepsPerRotation {1};
+    INDI::PropertyText GearReductionFactor {1};
 
     tic::handle handleTicRA;
     tic::variables varTicRA;
@@ -60,3 +64,5 @@ private:
     tic::variables varTicDec;
 
 };
+
+
