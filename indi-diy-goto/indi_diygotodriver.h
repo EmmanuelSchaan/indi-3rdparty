@@ -46,7 +46,10 @@ private:
     
     // Connection to Pololu Tics
     tic::handle open_tic_handle(const char * desired_serial_number);
-    bool connectTicsRADec();
+    bool connectTics();
+    bool setupTics();
+    bool energizeTics();
+    bool deenergizeTics();
 
     // Text properties for Tics
     // RA and Dec Tic id

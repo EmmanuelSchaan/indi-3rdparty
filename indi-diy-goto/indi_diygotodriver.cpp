@@ -166,11 +166,14 @@ bool DIYGoTo::initProperties()
           IPS_IDLE);
     defineProperty(&MaxPulseAccelDecel);
 
+
     // Connect to the Pololu Tics
     LOG_INFO("Attempting connection to RA and Dec Tics");
-    connectTicsRADec();
-
-    // Manu: set the Tic parameters
+    connectTics();
+    // Set the Tic parameters
+    setupTics();
+    // Energize and exit safe start
+    energizeTics();
 
     return true;
 }
@@ -197,7 +200,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             //log the content of the property to the client
             LOGF_INFO("RA Tic ID set to %s", TicIdRA[0].getText());
             // Re-connect to the Pololu Tics
-            connectTicsRADec();
+            connectTics();
+            setupTics();
+            energizeTics();
             return true;
         }
         if (TicIdDec.isNameMatch(name))
@@ -207,7 +212,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             TicIdDec.apply();
             LOGF_INFO("Dec Tic ID set to %s", TicIdDec[0].getText());
             // Re-connect to the Pololu Tics
-            connectTicsRADec();
+            connectTics();
+            setupTics();
+            energizeTics();
             return true;
         }
         if (StepsPerRotation.isNameMatch(name))
@@ -216,6 +223,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             StepsPerRotation.setState(IPS_IDLE);
             StepsPerRotation.apply();
             LOGF_INFO("Step. mot. steps per rotation set to %s", StepsPerRotation[0].getText());
+            // Re-setup Tics
+            setupTics();
+            energizeTics();
             return true;
         }
         if (GearReductionFactor.isNameMatch(name))
@@ -232,6 +242,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             MotorMaxCurrent.setState(IPS_IDLE);
             MotorMaxCurrent.apply();
             LOGF_INFO("Motor max current set to %s [mA]", MotorMaxCurrent[0].getText());
+            // Re-setup Tics
+            setupTics();
+            energizeTics();
             return true;
         }
         if (Microstepping.isNameMatch(name))
@@ -240,6 +253,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             Microstepping.setState(IPS_IDLE);
             Microstepping.apply();
             LOGF_INFO("Microstepping set to %s", Microstepping[0].getText());
+            // Re-setup Tics
+            setupTics();
+            energizeTics();
             return true;
         }
         if (MaxPulseSpeed.isNameMatch(name))
@@ -248,6 +264,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             MaxPulseSpeed.setState(IPS_IDLE);
             MaxPulseSpeed.apply();
             LOGF_INFO("Max pulse speed set to %s * 1.e-4 pulses/sec", MaxPulseSpeed[0].getText());
+            // Re-setup Tics
+            setupTics();
+            energizeTics();
             return true;
         }
         if (MaxPulseAccelDecel.isNameMatch(name))
@@ -256,6 +275,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             MaxPulseAccelDecel.setState(IPS_IDLE);
             MaxPulseAccelDecel.apply();
             LOGF_INFO("Max pulse accel/decel set to %s * 1.e-4 pulses/sec^2", MaxPulseAccelDecel[0].getText());
+            // Re-setup Tics
+            setupTics();
+            energizeTics();
             return true;
         }
     }
@@ -289,11 +311,9 @@ tic::handle DIYGoTo::open_tic_handle(const char * desired_serial_number = nullpt
       // the next device in the list.
       continue;
     }
- 
     // Open a handle to this device and return it.
     return tic::handle(device);
   }
- 
   throw std::runtime_error("No Tic devices found.");
 }
 
@@ -301,28 +321,138 @@ tic::handle DIYGoTo::open_tic_handle(const char * desired_serial_number = nullpt
 // Establish connection to both RA and Dec Tics,
 // given the desired Tic ID,
 // and get their handles and variables.
-bool DIYGoTo::connectTicsRADec()
+bool DIYGoTo::connectTics()
 {
     try 
     {
+       // RA Tic
        handleTicRA = open_tic_handle(TicIdRA[0].getText());
        varTicRA = handleTicRA.get_variables();
-
+       // Dec Tic
        handleTicDec = open_tic_handle(TicIdDec[0].getText());
        varTicDec = handleTicDec.get_variables();
-
+       
        LOG_INFO("Successfully connected to RA and Dec Tics.");
     }
     catch(const std::exception &error)
     {
-    // Inform the client
-    LOG_ERROR("Could not connect to the RA and Dec Tics.");
-    LOG_ERROR(error.what());
-    return false;
+       LOG_ERROR("Could not connect to the RA and Dec Tics.");
+       LOG_ERROR(error.what());
+       return false;
     }
-
     return true;
 }
+
+
+// Send all settings to RA and Dec Tics
+bool DIYGoTo::setupTics()
+{
+    try 
+    {
+      // RA motor
+      // Set the maximum motor current
+      handleTicRA.set_current_limit(static_cast<uint32_t>(std::stoul(MotorMaxCurrent[0].getText())));
+      //handleTicRA.set_current_limit_code(uint8_t code);
+      // Set the microstepping mode
+      handleTicRA.set_step_mode(static_cast<uint8_t>(std::stoul(Microstepping[0].getText())));
+      // Set max speed, acceleration, deceleration, decay mode
+      handleTicRA.set_max_speed(static_cast<uint32_t>(std::stoul(MaxPulseSpeed[0].getText())));
+      handleTicRA.set_max_accel(static_cast<uint32_t>(std::stoul(MaxPulseAccelDecel[0].getText())));
+      handleTicRA.set_max_decel(static_cast<uint32_t>(std::stoul(MaxPulseAccelDecel[0].getText())));
+      // For my Tic T834, the 'mixed50' decay mode
+      // corresponds
+      //#define TIC_DECAY_MODE_T834_MIXED50 0
+      //#define TIC_DECAY_MODE_T834_SLOW 1
+      //#define TIC_DECAY_MODE_T834_FAST 2
+      //#define TIC_DECAY_MODE_T834_MIXED25 3
+      //#define TIC_DECAY_MODE_T834_MIXED75 4 to code 0
+      handleTicRA.set_decay_mode(0);
+
+      // Dec motor
+      handleTicDec.set_current_limit(static_cast<uint32_t>(std::stoul(MotorMaxCurrent[0].getText())));
+      handleTicDec.set_step_mode(static_cast<uint8_t>(std::stoul(Microstepping[0].getText())));
+      handleTicDec.set_max_speed(static_cast<uint32_t>(std::stoul(MaxPulseSpeed[0].getText())));
+      handleTicDec.set_max_accel(static_cast<uint32_t>(std::stoul(MaxPulseAccelDecel[0].getText())));
+      handleTicDec.set_max_decel(static_cast<uint32_t>(std::stoul(MaxPulseAccelDecel[0].getText())));
+      handleTicDec.set_decay_mode(0);
+
+      LOG_INFO("Tic settings done.");
+    }
+    catch(const std::exception &error)
+    {
+       LOG_ERROR("Could not input Tic settings.");
+       LOG_ERROR(error.what());
+       return false;
+    }
+    return true;
+}
+
+// Energize Tics and exit safe start,
+// so that motors can move
+bool DIYGoTo::energizeTics()
+{
+    try 
+    {
+       // RA Tic
+       handleTicRA.energize();
+       handleTicRA.exit_safe_start();
+       // Dec Tic
+       handleTicDec.energize();
+       handleTicDec.exit_safe_start();
+       LOG_INFO("Successfully energized RA and Dec Tics.");
+    }
+    catch(const std::exception &error)
+    {
+       LOG_ERROR("Could not energize RA and Dec Tics.");
+       LOG_ERROR(error.what());
+       return false;
+    }
+    return true;
+}
+
+
+bool DIYGoTo::deenergizeTics()
+{
+    try 
+    {
+       handleTicRA.deenergize();
+       handleTicDec.deenergize();
+       LOG_INFO("Successfully de-energized RA and Dec Tics.");
+    }
+    catch(const std::exception &error)
+    {
+       LOG_ERROR("Could not de-energize RA and Dec Tics.");
+       LOG_ERROR(error.what());
+       return false;
+    }
+    return true;
+}
+
+
+
+
+//// Initialize the Tic parameters
+//// The Tic will stop moving unless a reset command timeout 
+//// is sent every second.
+//// This can be avoided by unchecking the box in the ticgui
+//// called "Enable command timeout"
+//void handle::reset_command_timeout()
+//
+//// Energize the motor
+//void handle::energize()
+//// De-energize the motor
+//void handle::deenergize()
+//// Exit the safe start mode, to allow motor to move
+//void handle::exit_safe_start()
+//// Enter the safe start mode, to avoid motor moving
+//void handle::enter_safe_start()
+//
+//// Other useful Tic functions:
+//void handle::set_target_position(int32_t position)
+//void handle::set_target_velocity(int32_t velocity)
+//void handle::halt_and_set_position(int32_t position)
+//void handle::halt_and_hold()
+
 
 
  
