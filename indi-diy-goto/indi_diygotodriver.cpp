@@ -49,8 +49,25 @@ bool DIYGoTo::initProperties()
     // to attempt to perform a physical connection to the serial port.
     setSimulation(true);
  
-    // Set telescope capabilities. 0 is for the the number of slew rates that we support. We have none for this simple driver.
-    SetTelescopeCapability(TELESCOPE_CAN_GOTO | TELESCOPE_CAN_ABORT, 0);
+    // Set telescope capabilities.
+    SetTelescopeCapability(TELESCOPE_CAN_GOTO |
+//         TELESCOPE_CAN_SYNC |              
+//         TELESCOPE_CAN_PARK |              
+//         TELESCOPE_HAS_TIME |             
+//         TELESCOPE_HAS_LOCATION |            
+//         TELESCOPE_HAS_PIER_SIDE |          
+//         TELESCOPE_HAS_PEC |                
+//         TELESCOPE_HAS_TRACK_MODE |         
+//         TELESCOPE_CAN_CONTROL_TRACK |       
+//         TELESCOPE_HAS_TRACK_RATE |         
+//         TELESCOPE_HAS_PIER_SIDE_SIMULATION |
+//         TELESCOPE_CAN_TRACK_SATELLITE |
+         TELESCOPE_CAN_ABORT,
+         0);   // 0 is for the the number of slew rates that we support. We have none for this simple driver.
+
+
+
+
 
 
     // RA Tic id
@@ -223,9 +240,6 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             StepsPerRotation.setState(IPS_IDLE);
             StepsPerRotation.apply();
             LOGF_INFO("Step. mot. steps per rotation set to %s", StepsPerRotation[0].getText());
-            // Re-setup Tics
-            setupTics();
-            energizeTics();
             return true;
         }
         if (GearReductionFactor.isNameMatch(name))
@@ -336,8 +350,7 @@ bool DIYGoTo::connectTics()
     }
     catch(const std::exception &error)
     {
-       LOG_ERROR("Could not connect to the RA and Dec Tics.");
-       LOG_ERROR(error.what());
+       LOGF_ERROR("Could not connect to the RA and Dec Tics: %s", error.what());
        return false;
     }
     return true;
@@ -380,8 +393,7 @@ bool DIYGoTo::setupTics()
     }
     catch(const std::exception &error)
     {
-       LOG_ERROR("Could not input Tic settings.");
-       LOG_ERROR(error.what());
+       LOGF_ERROR("Could not input Tic settings: %s", error.what());
        return false;
     }
     return true;
@@ -403,8 +415,7 @@ bool DIYGoTo::energizeTics()
     }
     catch(const std::exception &error)
     {
-       LOG_ERROR("Could not energize RA and Dec Tics.");
-       LOG_ERROR(error.what());
+       LOGF_ERROR("Could not energize RA and Dec Tics: %s", error.what());
        return false;
     }
     return true;
@@ -421,8 +432,7 @@ bool DIYGoTo::deenergizeTics()
     }
     catch(const std::exception &error)
     {
-       LOG_ERROR("Could not de-energize RA and Dec Tics.");
-       LOG_ERROR(error.what());
+       LOGF_ERROR("Could not de-energize RA and Dec Tics: %s", error.what());
        return false;
     }
     return true;
@@ -431,22 +441,6 @@ bool DIYGoTo::deenergizeTics()
 
 
 
-//// Initialize the Tic parameters
-//// The Tic will stop moving unless a reset command timeout 
-//// is sent every second.
-//// This can be avoided by unchecking the box in the ticgui
-//// called "Enable command timeout"
-//void handle::reset_command_timeout()
-//
-//// Energize the motor
-//void handle::energize()
-//// De-energize the motor
-//void handle::deenergize()
-//// Exit the safe start mode, to allow motor to move
-//void handle::exit_safe_start()
-//// Enter the safe start mode, to avoid motor moving
-//void handle::enter_safe_start()
-//
 //// Other useful Tic functions:
 //void handle::set_target_position(int32_t position)
 //void handle::set_target_velocity(int32_t velocity)
@@ -466,7 +460,61 @@ bool DIYGoTo::Handshake()
     return true;
 }
  
+
+
+/**************************************************************************************
+** Driver loop, called periodically
+***************************************************************************************/
+void DIYGoTo::TimerHit()
+{
+    if (!isConnected())
+        return;
+
+//    LOG_INFO("timer hit");
+    try 
+    {
+       // The Tic will stop moving unless a reset command timeout 
+       // is sent every second.
+       // This can be avoided by unchecking the box in the ticgui
+       // called "Enable command timeout"
+       handleTicRA.reset_command_timeout(); 
+       handleTicDec.reset_command_timeout(); 
+//       LOG_INFO("Tic timeout reset");
+    }
+    catch(const std::exception &error)
+    {
+
+       //       LOGF_ERROR("Could not reset Tic timeout: %s", error.what());
+    }
+
+    // If you don't call SetTimer, we'll never get called again, until we disconnect
+    // and reconnect.
+    //SetTimer(POLLMS); // Deprecated, in practice 1 second
+    SetTimer(500);   // 500 milliseconds
+}
+
+
+/**************************************************************************************
+** Client is asking us to abort our motion
+***************************************************************************************/
+bool DIYGoTo::Abort()
+{
+    try 
+    {
+       handleTicRA.halt_and_hold(); 
+       handleTicDec.halt_and_hold(); 
+       LOG_INFO("Aborted RA, Dec motion");
+       return true;
+    }
+    catch(const std::exception &error)
+    {
+       LOGF_ERROR("Could not abort RA, Dec motion: %s", error.what());
+       return false;
+    }
+}
  
+
+
 /**************************************************************************************
 ** Client is asking us to slew to a new position
 ***************************************************************************************/
@@ -490,13 +538,6 @@ bool DIYGoTo::Goto(double ra, double dec)
     return true;
 }
  
-/**************************************************************************************
-** Client is asking us to abort our motion
-***************************************************************************************/
-bool DIYGoTo::Abort()
-{
-    return true;
-}
  
 /**************************************************************************************
 ** Client is asking us to report telescope status

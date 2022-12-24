@@ -26,6 +26,7 @@ protected:
     bool ReadScopeStatus() override;
     bool Goto(double, double) override;
     bool Abort() override;
+    void TimerHit() override;
  
 
 private:
