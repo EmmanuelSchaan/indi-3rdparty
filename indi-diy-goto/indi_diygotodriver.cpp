@@ -113,10 +113,64 @@ bool DIYGoTo::initProperties()
           IPS_IDLE);
     defineProperty(&GearReductionFactor);
 
+    // Limiting current for stepper motors
+    char motorMaxCurrentDefault[256]={"192"};
+    IUGetConfigText(getDeviceName(), "MOTOR_MAX_CURRENT", "MOTOR_MAX_CURRENT", motorMaxCurrentDefault, 256);
+    MotorMaxCurrent[0].fill("MOTOR_MAX_CURRENT", "[mA]", motorMaxCurrentDefault);
+    MotorMaxCurrent.fill(
+          getDeviceName(), 
+          "MOTOR_MAX_CURRENT", 
+          "Max current",
+          INFO_TAB, IP_RW, 
+          60, 
+          IPS_IDLE);
+    defineProperty(&MotorMaxCurrent);
+
+    // Microstepping setting,
+    // i.e. nb of microsteps per motor step
+    char microsteppingDefault[256]={"192"};
+    IUGetConfigText(getDeviceName(), "MICROSTEPPING", "MICROSTEPPING", microsteppingDefault, 256);
+    Microstepping[0].fill("MICROSTEPPING", "Nb of microsteps", microsteppingDefault);
+    Microstepping.fill(
+          getDeviceName(), 
+          "MICROSTEPPING", 
+          "Microstepping",
+          INFO_TAB, IP_RW, 
+          60, 
+          IPS_IDLE);
+    defineProperty(&Microstepping);
+
+    // Maximum pulse speed [1.e-4 pulses/sec]
+    char maxPulseSpeedDefault[256]={"400000000"};
+    IUGetConfigText(getDeviceName(), "maxPulseSpeed", "maxPulseSpeed", maxPulseSpeedDefault, 256);
+    MaxPulseSpeed[0].fill("maxPulseSpeed", "[1.e-4 * pulses/sec]", maxPulseSpeedDefault);
+    MaxPulseSpeed.fill(
+          getDeviceName(), 
+          "maxPulseSpeed", 
+          "Max pulse speed",
+          INFO_TAB, IP_RW, 
+          60, 
+          IPS_IDLE);
+    defineProperty(&MaxPulseSpeed);
+
+    // Maximum pulse accel/deceleration [1.e-4 pulses/sec^2]
+    char maxPulseAccelDecelDefault[256]={"4000000"};
+    IUGetConfigText(getDeviceName(), "maxPulseAccelDecel", "maxPulseAccelDecel", maxPulseAccelDecelDefault, 256);
+    MaxPulseAccelDecel[0].fill("maxPulseAccelDecel", "[1.e-4 * pulses/sec^2]", maxPulseAccelDecelDefault);
+    MaxPulseAccelDecel.fill(
+          getDeviceName(), 
+          "maxPulseAccelDecel", 
+          "Max pulse accel/decel",
+          INFO_TAB, IP_RW, 
+          60, 
+          IPS_IDLE);
+    defineProperty(&MaxPulseAccelDecel);
 
     // Connect to the Pololu Tics
     LOG_INFO("Attempting connection to RA and Dec Tics");
     connectTicsRADec();
+
+    // Manu: set the Tic parameters
 
     return true;
 }
@@ -170,6 +224,38 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             GearReductionFactor.setState(IPS_IDLE);
             GearReductionFactor.apply();
             LOGF_INFO("Gear reduction factor set to %s", GearReductionFactor[0].getText());
+            return true;
+        }
+        if (MotorMaxCurrent.isNameMatch(name))
+        {
+            MotorMaxCurrent.update(texts, names, n);
+            MotorMaxCurrent.setState(IPS_IDLE);
+            MotorMaxCurrent.apply();
+            LOGF_INFO("Motor max current set to %s [mA]", MotorMaxCurrent[0].getText());
+            return true;
+        }
+        if (Microstepping.isNameMatch(name))
+        {
+            Microstepping.update(texts, names, n);
+            Microstepping.setState(IPS_IDLE);
+            Microstepping.apply();
+            LOGF_INFO("Microstepping set to %s", Microstepping[0].getText());
+            return true;
+        }
+        if (MaxPulseSpeed.isNameMatch(name))
+        {
+            MaxPulseSpeed.update(texts, names, n);
+            MaxPulseSpeed.setState(IPS_IDLE);
+            MaxPulseSpeed.apply();
+            LOGF_INFO("Max pulse speed set to %s * 1.e-4 pulses/sec", MaxPulseSpeed[0].getText());
+            return true;
+        }
+        if (MaxPulseAccelDecel.isNameMatch(name))
+        {
+            MaxPulseAccelDecel.update(texts, names, n);
+            MaxPulseAccelDecel.setState(IPS_IDLE);
+            MaxPulseAccelDecel.apply();
+            LOGF_INFO("Max pulse accel/decel set to %s * 1.e-4 pulses/sec^2", MaxPulseAccelDecel[0].getText());
             return true;
         }
     }

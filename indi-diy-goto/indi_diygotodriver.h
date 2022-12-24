@@ -56,6 +56,10 @@ private:
     // Specs of stepper motor and gear train
     INDI::PropertyText StepsPerRotation {1};
     INDI::PropertyText GearReductionFactor {1};
+    INDI::PropertyText MotorMaxCurrent {1};
+    INDI::PropertyText Microstepping {1};
+    INDI::PropertyText MaxPulseSpeed {1};
+    INDI::PropertyText MaxPulseAccelDecel {1};
 
     tic::handle handleTicRA;
     tic::variables varTicRA;
