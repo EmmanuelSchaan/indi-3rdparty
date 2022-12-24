@@ -4,12 +4,18 @@
 #  POLOLU_TIC_FOUND - system has found the library
 #  POLOLU_TIC_INCLUDE_DIR - the include directory
 #  POLOLU_TIC_LIBRARIES - Link these to use the library
+# 
+# Manu: I hardcoded the paths to the library libpololu-tic-1
+# and to the header file tic.hpp,
+# rather than using the cmake find_path and find_library functions.
+# I found the paths by typing in terminal:
+# $(pkg-config libpololu-tic-1 --cflags --libs)
+# which outputed:
+# -I/usr/local/include/libpololu-tic-1 -L/usr/local/lib -lpololu-tic-1
+# I was inspired by the code example in the Pololu Tic documentation,
+# which was compiled by typing:
+# g++ code.cpp $(pkg-config libpololu-tic-1 --cflags --libs)
 
-# Copyright (c) 2006, Jasem Mutlaq <mutlaqja@ikarustech.com>
-# Based on FindLibfacile by Carsten Niehaus, <cniehaus@gmx.de>
-#
-# Redistribution and use is allowed according to the terms of the BSD license.
-# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
 if (POLOLU_TIC_INCLUDE_DIR AND POLOLU_TIC_LIBRARIES)
 

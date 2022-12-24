@@ -1,7 +1,8 @@
 #include "indi_diygotodriver.h"
+
 // Pololu Tic library
-#include <tic.hpp>
- 
+//#include <tic.hpp>
+//#include <iostream>  // Was in the tic code example; may not be needed
 
 #include "indicom.h"
 #include <cmath>
@@ -43,6 +44,7 @@ bool DIYGoTo::initProperties()
     // Add Debug control so end user can turn debugging/loggin on and off
     addDebugControl();
  
+// Manu: I should probably comment this out
     // Enable simulation mode so that serial connection in INDI::Telescope does not try
     // to attempt to perform a physical connection to the serial port.
     setSimulation(true);
@@ -83,6 +85,10 @@ bool DIYGoTo::initProperties()
     defineProperty(&TicIdDec);
 
 
+    // Connect to the Pololu Tics
+    LOG_INFO("Attempting connection to RA and Dec Tics");
+    connectTicsRADec();
+
     return true;
 }
 
@@ -106,7 +112,9 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             // Send back to client.
             TicIdRA.apply();
             //log the content of the property to the client
-            LOG_INFO(TicIdRA[0].getText());
+            LOGF_INFO("RA Tic ID set to %s", TicIdRA[0].getText());
+            // Re-connect to the Pololu Tics
+            connectTicsRADec();
             return true;
         }
         // Same for Dec Tic id
@@ -115,17 +123,15 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
             TicIdDec.update(texts, names, n);
             TicIdDec.setState(IPS_IDLE);
             TicIdDec.apply();
-            LOG_INFO(TicIdDec[0].getText());
+            LOGF_INFO("Dec Tic ID set to %s", TicIdDec[0].getText());
+            // Re-connect to the Pololu Tics
+            connectTicsRADec();
             return true;
         }
     }
     // Nobody has claimed this, so let the parent handle it
     return INDI::Telescope::ISNewText(dev, name, texts, names, n);
 }
-
-
-
-
 
 
 /**************************************************************************************
@@ -138,7 +144,7 @@ bool DIYGoTo::ISNewText(const char *dev, const char *name, char *texts[], char *
 //   tic_handle * handle = open_handle();
 // To open a handle to the Tic with serial number 01234567:
 //   tic_handle * handle = open_handle("01234567");
-tic::handle open_handle(const char * desired_serial_number = nullptr)
+tic::handle DIYGoTo::open_tic_handle(const char * desired_serial_number = nullptr)
 {
   // Get a list of Tic devices connected via USB.
   std::vector<tic::device> list = tic::list_connected_devices();
@@ -158,10 +164,35 @@ tic::handle open_handle(const char * desired_serial_number = nullptr)
     return tic::handle(device);
   }
  
-  throw std::runtime_error("No device found.");
+  throw std::runtime_error("No Tic devices found.");
 }
 
 
+// Establish connection to both RA and Dec Tics,
+// given the desired Tic ID,
+// and get their handles and variables.
+bool DIYGoTo::connectTicsRADec()
+{
+    try 
+    {
+       handleTicRA = open_tic_handle(TicIdRA[0].getText());
+       varTicRA = handleTicRA.get_variables();
+
+       handleTicDec = open_tic_handle(TicIdDec[0].getText());
+       varTicDec = handleTicDec.get_variables();
+
+       LOG_INFO("Successfully connected to RA and Dec Tics.");
+    }
+    catch(const std::exception &error)
+    {
+    // Inform the client
+    LOG_ERROR("Could not connect to the RA and Dec Tics.");
+    LOG_ERROR(error.what());
+    return false;
+    }
+
+    return true;
+}
 
 
  

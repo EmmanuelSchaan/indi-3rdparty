@@ -2,6 +2,9 @@
  
 #include "inditelescope.h"
  
+// Pololu Tic library
+#include <tic.hpp>
+#include <iostream>  // Was in the tic code example; may not be needed
 
 class DIYGoTo : public INDI::Telescope
 {
@@ -40,10 +43,20 @@ private:
     // slew rate, degrees/s
     static const uint8_t SLEW_RATE = 3;
 
+    
+    // Connection to Pololu Tics
+    tic::handle open_tic_handle(const char * desired_serial_number);
+    bool connectTicsRADec();
 
     // Text property to enter the RA and Dec Tic id
     // for me, it is "00315372" for RA and "00315338" for Dec
     INDI::PropertyText TicIdRA {1};
     INDI::PropertyText TicIdDec {1};
+
+    tic::handle handleTicRA;
+    tic::variables varTicRA;
+
+    tic::handle handleTicDec;
+    tic::variables varTicDec;
 
 };
