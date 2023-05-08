@@ -449,8 +449,17 @@ bool DIYGoTo::deenergizeTics()
 //void handle::set_target_velocity(int32_t velocity)
 //void handle::halt_and_set_position(int32_t position)
 //void handle::halt_and_hold()
-
-
+//
+//int32_t vars::get_current_position();
+//int32_t vars::get_current_velocity() const noexcept
+//int32_t vars::get_target_position() const noexcept
+//int32_t vars::get_target_velocity() const noexcept
+//int32_t vars::get_acting_target_position() const noexcept
+//uint32_t vars::get_time_since_last_step() const noexcept
+//uint8_t vars::get_device_reset() const noexcept
+//uint32_t vars::get_vin_voltage() const noexcept
+//uint32_t vars::get_up_time() const noexcept
+//uint8_t vars::get_last_motor_driver_error() const noexcept
 
  
 /**************************************************************************************
